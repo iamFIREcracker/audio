@@ -10,6 +10,7 @@ import cairo
 import gtk
 from numpy import abs
 from numpy import fft
+from numpy import log10
 
 
 class Visualizer(gtk.Window):
@@ -94,9 +95,11 @@ class Analyzer(Visualizer):
         step = self.width / (samples // 2)
         fft_data = abs(fft.fft(data)[:samples // 2])
         normalization = 2 / samples
+        scale_factor = 1024
         for (i, value) in enumerate(fft_data * normalization):
+            value = log10(value * scale_factor + 1) / log10(scale_factor)
             x = i * step
-            y = - 1 * value * self.height
+            y = -value * self.height
             cr.move_to(x, self.height - 1)
             cr.rel_line_to(0, y)
             cr.stroke()
