@@ -96,7 +96,7 @@ class Analyzer(Visualizer):
         normalization = 2 / samples
         for (i, value) in enumerate(fft_data * normalization):
             x = i * step
-            y = - 2 * value * self.height
+            y = - 1 * value * self.height
             cr.move_to(x, self.height - 1)
             cr.rel_line_to(0, y)
             cr.stroke()
