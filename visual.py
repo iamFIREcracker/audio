@@ -7,7 +7,6 @@
 from __future__ import division
 
 import cairo
-import gobject
 import gtk
 from numpy import abs
 from numpy import fft
