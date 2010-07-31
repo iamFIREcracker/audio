@@ -5,13 +5,12 @@
 """
 
 from __future__ import division
+from math import log10
 
 import cairo
 import gtk
-from numpy import abs
-from numpy import fft
-from numpy import log10
 
+from util import fft
 
 class Visualizer(gtk.Window):
     """Base class used by inheritance from the various specific visualizers.
@@ -93,10 +92,8 @@ class Analyzer(Visualizer):
         cr.set_source_rgb(0, 0, 0)
         samples = len(data)
         step = self.width / (samples // 2)
-        fft_data = abs(fft.fft(data)[:samples // 2])
-        normalization = 2 / samples
         scale_factor = 1024
-        for (i, value) in enumerate(fft_data * normalization):
+        for (i, value) in enumerate(map(abs, fft(data))):
             value = log10(value * scale_factor + 1) / log10(scale_factor)
             x = i * step
             y = -value * self.height
