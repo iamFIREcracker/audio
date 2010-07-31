@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: Latin-1 -*-
 
-"""Module containing utility function for audio processing.
+"""Module containing utility functions for audio processing.
 """
 
 from __future__ import division
