@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: Latin-1 -*-
 
 """Module containing widgets used to display audio signals.
@@ -11,6 +10,7 @@ import cairo
 import gtk
 
 from util import fft
+
 
 class Visualizer(gtk.Window):
     """Base class used by inheritance from the various specific visualizers.
