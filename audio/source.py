@@ -94,9 +94,9 @@ class Microphone(Source):
                        signed=true,
                        endianness=1234 !
                tee name=t !
-               queue !
+               queue max-size-time=1000 !
                    fakesink name=fsink signal-handoffs=true sync=true t. !
-               queue !
+               queue max-size-time=1000 !
                    autoaudiosink name=asink''', speakers, emit)
 
 
@@ -121,9 +121,9 @@ class Tone(Source):
                        signed=true,
                        endianness=1234 !
                tee name=t !
-               queue !
+               queue max-size-time=1000 !
                    fakesink name=fsink signal-handoffs=true sync=true t. !
-               queue !
+               queue max-size-time=1000 !
                    autoaudiosink name=asink''', speakers, emit)
         
     def set_values(self, freq, volume):
@@ -162,8 +162,8 @@ class AudioFile(Source):
                        signed=true,
                        endianness=1234 !
                tee name=t !
-               queue !
+               queue max-size-time=1000 !
                    fakesink name=fsink signal-handoffs=true sync=true t. !
-               queue !
+               queue max-size-time=1000 !
                    autoaudiosink name=asink'''.format(location), 
             speakers, emit)
