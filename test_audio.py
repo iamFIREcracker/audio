@@ -1,34 +1,19 @@
-#!/usr/bin/python
 # -*- coding: Latin-1 -*-
-
-"""Test script for the audio module.
-
-Create an audio source depending on the command line argument provided and
-start to visualize the audio shape on screen.
-"""
 
 import os
 import sys
 
 import gobject
-import gtk
 
-import audio
+import audio.source
+import audio.visual
 
 
-def delete_cb(visualizer, event, source):
-    """Invoked when the visualizer window is closed.
-    
-    Stop the source, then quit the gtk mainloop.
-    """
+def delete_cb(visualizer, event, source, loop):
     source.stop()
-    gtk.main_quit()
+    loop.quit()
 
 def new_data_cb(source, data, visualizer):
-    """Invoked when the audio source has produced new audio data.
-    
-    Call a refresh of the visualizer canvas.
-    """
     visualizer.refresh(data)
     
 def main(argv):
@@ -36,8 +21,8 @@ def main(argv):
         print "Usage: {0} <source>".format(sys.argv[0])
         return 1
     
+    loop = gobject.MainLoop()
     visualizer = audio.visual.Analyzer()
-    
     if argv[1] == 'mic':
         source = audio.source.Microphone(emit=True)
     elif argv[1] == 'tone':
@@ -48,12 +33,12 @@ def main(argv):
             location = os.path.join(os.getcwd(), location)
         source = audio.source.AudioFile(location, emit=True)
         
-    visualizer.connect('delete-event', delete_cb, source)
+    visualizer.connect('delete-event', delete_cb, source, loop)
     source.connect('new-data', new_data_cb, visualizer)
     source.start()
     
     gobject.threads_init()
-    gtk.main()
+    loop.run()
     
     return 0
     
