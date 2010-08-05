@@ -8,7 +8,6 @@ from math import pi
 
 import cairo
 import gobject
-import gst
 import gtk
 from gtk import gdk
 
@@ -37,6 +36,7 @@ class Pad(gtk.Window):
 
         self.oldx, self.oldy = -1, -1
         self.width, self.height = -1, -1
+        self.surface, self.cr = None, None
 
         darea = gtk.DrawingArea()
         darea.add_events(gdk.BUTTON_PRESS_MASK
@@ -55,10 +55,10 @@ class Pad(gtk.Window):
         """Notify the beginning of a drag and drop event.
         """
         x, y = event.x, event.y
-        self.draw_pointer(self.cr, self.width, self.height, x, y)
+        self.draw_pointer(self.cr, x, y)
         self.queue_draw()
         self.oldx, self.oldy = x, y
-        rel_x, rel_y = self.absolute_to_relative(x, y, self.width, self.height)
+        rel_x, rel_y = self.absolute_to_relative(x, y)
         self.emit('dnd-value', rel_x, rel_y)
         self.emit('start-dnd')
         return True
@@ -66,9 +66,10 @@ class Pad(gtk.Window):
     def button_release_cb(self, darea, event):
         """Notify the end of a drag and trop event.
         """
-        x, y = event.x, event.y
-        self.draw_pointer(self.cr, self.width, self.height, None, None, x, y)
+        self.oldx, self.oldy = event.x, event.y
+        self.draw_pointer(self.cr, None, None)
         self.queue_draw()
+        self.oldx, self.oldy = None, None
         self.emit('end-dnd')
         return True
 
@@ -103,12 +104,10 @@ class Pad(gtk.Window):
             y = event.y
             state = event.state
         if state & gdk.BUTTON1_MASK or state & gdk.BUTTON3_MASK:
-            self.draw_pointer(self.cr, self.width, self.height, x, y,
-                              self.oldx, self.oldy)
+            self.draw_pointer(self.cr, x, y)
             self.queue_draw()
             self.oldx, self.oldy = x, y
-            rel_x, rel_y = self.absolute_to_relative(x, y, self.width,
-                                                     self.height)
+            rel_x, rel_y = self.absolute_to_relative(x, y)
             self.emit('dnd-value', rel_x, rel_y)
         return True
 
@@ -124,27 +123,23 @@ class Pad(gtk.Window):
         cr.rectangle(0, 0, width, height)
         cr.fill()
 
-    def draw_pointer(self, cr, width, height, newx, newy,
-                     oldx=None, oldy=None):
+    def draw_pointer(self, cr, newx, newy):
         """Draw a circle surrounding the the pointer.
         
         Keywords:
             cr cairo context.
-            width width of the cairo context.
-            height height of the cairo context.
             newx new x coordinate of the pointer.
             newy new y coordinate of the pointer.
-            oldx old x coordinate of the pointer.
-            oldy old y coordinate of the pointer.
         """
-        data = [(oldx, oldy, 15, (1, 1, 1)), (newx, newy, 10, (0, 1, 0))]
-        for (x, y, radius, color) in data:
+        data = [(self.oldx, self.oldy, 15, (1, 1, 1)),
+                (newx, newy, 10, (0, 1, 0))]
+        for (x, y, radius, (r, g, b)) in data:
             if x and y:
-                cr.set_source_rgb(*color)
+                cr.set_source_rgb(r, g, b)
                 cr.arc(x, y, radius, 0, 2 * pi)
                 cr.fill()
 
-    def absolute_to_relative(self, x, y, width, height):
+    def absolute_to_relative(self, x, y):
         """Convert given coordinate from absolute to relative.
         
         The returned coordinates are relative to the center of the widget.
@@ -158,13 +153,13 @@ class Pad(gtk.Window):
         Return:
             Pair of relative coordinates bounded between -1 and +1.
         """
-        rel_x = (x - width / 2) / (width / 2)
+        rel_x = (x - self.width / 2) / (self.width / 2)
         if rel_x > 1:
             rel_x = 1
         elif rel_x < -1:
             rel_x = -1
             
-        rel_y = (height / 2 - y) / (height / 2)
+        rel_y = (self.height / 2 - y) / (self.height / 2)
         if rel_y > 1:
             rel_y = 1
         elif rel_y < -1:
