@@ -130,12 +130,12 @@ class Tone(Source):
         """Set source properties.
         
         Keywords:
-            freq new frequency value.
-            volume new volume value.
+            freq new frequency value bounded between -1 and +1.
+            volume new volume value bounded between -1 and +1.
         """
         source = self.pipeline.get_by_name('source')
-        source.set_property('freq', max(0, min(freq, 20000)))
-        source.set_property('volume', max(0, min(volume, 1)))
+        source.set_property('freq', 20000 * (freq + 1) / 2)
+        source.set_property('volume', 1 * (volume + 1) / 2)
 
 
 class AudioFile(Source):
