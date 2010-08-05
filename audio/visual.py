@@ -23,6 +23,9 @@ class Visualizer(gtk.Window):
         """
         super(Visualizer, self).__init__()
         
+        self.width, self.height = None, None
+        self.surface, self.cr = None, None
+        
         darea = gtk.DrawingArea()
         darea.connect('configure-event', self.configure_cb)
         darea.connect('expose-event', self.expose_cb)
@@ -51,7 +54,7 @@ class Visualizer(gtk.Window):
         cr.paint()
         return False
     
-    def draw(self, data):
+    def draw(self, cr, data):
         """Draw input data on the surface object.
         
         Keywords:
@@ -66,7 +69,7 @@ class Visualizer(gtk.Window):
         Keywords:
             data list of values bounded between -1 and +1.
         """
-        self.draw(self.cr, self.width, self.height, data)
+        self.draw(self.cr, data)
         self.queue_draw()
 
 
@@ -74,27 +77,25 @@ class Analyzer(Visualizer):
     """Display the spectrum analyzer of the input audio signal.
     """
     
-    def draw(self, cr, cr_width, cr_height, data):
+    def draw(self, cr, data):
         """
         Compute the fft, normalize it by a coefficient of 2/N, then draw a
         vertical line for each component of the signal.
         
         Keywords:
             cr cairo context used for drawing purposes.
-            cr_width width of the cairo context.
-            cr_height height of the cairo context.
             data list of values bounded between -1 and +1.
         """
         cr.set_source_rgb(1, 1, 1)
-        cr.rectangle(0, 0, cr_width, cr_height)
+        cr.rectangle(0, 0, self.width, self.height)
         cr.fill()
         
         cr.set_source_rgb(0, 0, 0)
         samples = len(data)
         step = self.width / (samples // 2)
-        scale_factor = 1024
+        scale_factor = 1
         for (i, value) in enumerate(map(abs, fft(data))):
-            value = log10(value * scale_factor + 1) / log10(scale_factor)
+            value = log10(value * scale_factor + 1) / log10(scale_factor + 1)
             x = i * step
             y = -value * self.height
             cr.move_to(x, self.height - 1)
@@ -116,28 +117,25 @@ class Oscilloscope(Visualizer):
         
         self.fill = fill
     
-    def draw(self, cr, cr_width, cr_height, data):
+    def draw(self, cr, data):
         """
         Connect the points of the input signal by simple lines.
         
         Keywords:
             cr cairo context used for drawing purposes.
-            cr_width width of the cairo context.
-            cr_height height of the cairo context.
             data list of values bounded between -1 and +1.
-            data List containing the values of the input signal.
         """
         cr.set_source_rgb(1, 1, 1)
-        cr.rectangle(0, 0, cr_width, cr_height)
+        cr.rectangle(0, 0, self.width, self.height)
         cr.fill()
         
         cr.set_source_rgb(0, 0, 0)
         samples = len(data)
-        step = (cr_width - 1) / (samples // 2)
-        cr.move_to(0, cr_height // 2)
+        step = (self.width - 1) / (samples // 2)
+        cr.move_to(0, self.height // 2)
         for (i, y) in enumerate(data):
             x = i * step
-            y = -y * (cr_height // 2)
-            cr.line_to(x, cr_height // 2 + y)
-        cr.line_to(cr_width - 1, cr_height // 2)
+            y = -y * (self.height // 2)
+            cr.line_to(x, self.height // 2 + y)
+        cr.line_to(self.width - 1, self.height // 2)
         cr.fill() if self.fill else cr.stroke()
