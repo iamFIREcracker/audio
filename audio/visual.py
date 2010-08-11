@@ -4,10 +4,11 @@
 """
 
 from __future__ import division
-from math import log10
 
 import cairo
 import gtk
+from numpy import abs
+from numpy import log10
 
 from audio.util import fft
 
@@ -42,7 +43,6 @@ class Visualizer(gtk.Window):
         self.context = cairo.Context(self.surface)
         self.context.scale(width / 2, height / 2)
         self.context.translate(1, 1)
-        self.context.set_line_width(0.005)
         
         return True
         
@@ -59,12 +59,11 @@ class Visualizer(gtk.Window):
 
         return False
     
-    def draw(self, context, data):
+    def draw(self, context):
         """Redraw the drawing area.
         
         Keywords:
             context surface used for drawing actions.
-            data list of data to be visualized.
         """
         pass
 
@@ -75,7 +74,8 @@ class Visualizer(gtk.Window):
             data list of values supposed to be bounded between -(2 ** 15) and
                  ((2 ** 15) - 1).
         """
-        self.draw(self.context, data)
+        self.data[:] = data
+        self.draw(self.context)
         self.queue_draw()
 
 
@@ -83,23 +83,25 @@ class Analyzer(Visualizer):
     """Display the spectrum analyzer of the input audio signal.
     """
     
-    def draw(self, context, data):
+    def draw(self, context):
         """Redraw the drawing area.
         
         Keywords:
             context surface used for drawing actions.
-            data list of data to be visualized.
         """
         context.set_source_rgb(0, 0, 0)
         context.rectangle(-1, -1, 2, 2)
         context.fill()
         context.set_source_rgb(1, 1, 1)
         
-        threshold = -60 # decibel
-        data = fft(data)
+        threshold = -60 # dB
+        data = self.data
+        
+        data = 20 * log10(abs(fft(data) + 1e-15))
+        
         width = 2 / len(data)
         context.set_line_width(width)
-        x = -1
+        x = -1 + width / 2
         for value in data:
             context.move_to(x, 1)
             if value < threshold:
@@ -124,22 +126,25 @@ class Oscilloscope(Visualizer):
         
         self.fill = fill
     
-    def draw(self, context, data):
+    def draw(self, context):
         """Redraw the drawing area.
         
         Keywords:
             context surface used for drawing actions.
-            data list of data to be visualized.
         """
         context.set_source_rgb(0, 0, 0)
         context.rectangle(-1, -1, 2, 2)
         context.fill()
         
-        context.set_source_rgb(1, 0, 1)
+        fill = self.fill
+        data = self.data
+        
+        context.set_source_rgb(1, 1, 1)
         width = 2 / len(data)
-        x = -1
+        context.set_line_width(width)
+        x = -1 + width / 2
         for value in data:
-            y = -value / 32768
+            y = -value
             context.line_to(x, y)
             context.move_to(x, y)
             x += width
