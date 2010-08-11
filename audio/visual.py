@@ -9,7 +9,7 @@ from math import log10
 import cairo
 import gtk
 
-from util import fft
+from audio.util import fft
 
 
 class Visualizer(gtk.Window):
@@ -23,43 +23,48 @@ class Visualizer(gtk.Window):
         """
         super(Visualizer, self).__init__()
         
-        self.width, self.height = None, None
-        self.surface, self.cr = None, None
-        
+        self.data = []
+        self.surface = self.context = None
         darea = gtk.DrawingArea()
+        
         darea.connect('configure-event', self.configure_cb)
         darea.connect('expose-event', self.expose_cb)
         self.add(darea)
-        
         self.show_all()
 
     def configure_cb(self, darea, event):
-        """Update the cairo context used for the drawing actions.
+        """Create a private surface and its cairo context.
         """
-        _, _, self.width, self.height = darea.get_allocation()
+        width, height = darea.window.get_size()
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                          self.width,
-                                          self.height)
-        self.cr = cairo.Context(self.surface)
+                                          width,
+                                          height)
+        self.context = cairo.Context(self.surface)
+        self.context.scale(width / 2, height / 2)
+        self.context.translate(1, 1)
+        self.context.set_line_width(0.005)
+        
         return True
-    
+        
     def expose_cb(self, darea, event):
         """Redraw either the whole window or a part of it.
         """
-        cr = darea.window.cairo_create()
-        cr.rectangle(event.area.x, event.area.y,
-                     event.area.width, event.area.height)
-        cr.clip()
-        cr.set_source_surface(self.surface, 0, 0)
-        cr.paint()
+        context = darea.window.cairo_create()
+        
+        context.rectangle(event.area.x, event.area.y,
+                          event.area.width, event.area.height)
+        context.clip()
+        context.set_source_surface(self.surface, 0, 0)
+        context.paint()
+
         return False
     
-    def draw(self, cr, data):
-        """Draw input data on the surface object.
+    def draw(self, context, data):
+        """Redraw the drawing area.
         
         Keywords:
-            cr cairo context used for drawing purposes.
-            data list of values bounded between -1 and +1.
+            context surface used for drawing actions.
+            data list of data to be visualized.
         """
         pass
 
@@ -67,9 +72,10 @@ class Visualizer(gtk.Window):
         """Refresh the data displayed on screen.
         
         Keywords:
-            data list of values bounded between -1 and +1.
+            data list of values supposed to be bounded between -(2 ** 15) and
+                 ((2 ** 15) - 1).
         """
-        self.draw(self.cr, data)
+        self.draw(self.context, data)
         self.queue_draw()
 
 
@@ -77,30 +83,31 @@ class Analyzer(Visualizer):
     """Display the spectrum analyzer of the input audio signal.
     """
     
-    def draw(self, cr, data):
-        """
-        Compute the fft, normalize it by a coefficient of 2/N, then draw a
-        vertical line for each component of the signal.
+    def draw(self, context, data):
+        """Redraw the drawing area.
         
         Keywords:
-            cr cairo context used for drawing purposes.
-            data list of values bounded between -1 and +1.
+            context surface used for drawing actions.
+            data list of data to be visualized.
         """
-        cr.set_source_rgb(1, 1, 1)
-        cr.rectangle(0, 0, self.width, self.height)
-        cr.fill()
+        context.set_source_rgb(0, 0, 0)
+        context.rectangle(-1, -1, 2, 2)
+        context.fill()
+        context.set_source_rgb(1, 1, 1)
         
-        cr.set_source_rgb(0, 0, 0)
-        samples = len(data)
-        step = self.width / (samples // 2)
-        scale_factor = 1
-        for (i, value) in enumerate(map(abs, fft(data))):
-            value = log10(value * scale_factor + 1) / log10(scale_factor + 1)
-            x = i * step
-            y = -value * self.height
-            cr.move_to(x, self.height - 1)
-            cr.rel_line_to(0, y)
-            cr.stroke()
+        threshold = -60 # decibel
+        data = fft(data)
+        width = 2 / len(data)
+        context.set_line_width(width)
+        x = -1
+        for value in data:
+            context.move_to(x, 1)
+            if value < threshold:
+                value = threshold
+            y = 1 - (value - threshold) / (-threshold) * 2
+            context.line_to(x, y)
+            x += width
+        context.stroke()
     
     
 class Oscilloscope(Visualizer):
@@ -117,25 +124,23 @@ class Oscilloscope(Visualizer):
         
         self.fill = fill
     
-    def draw(self, cr, data):
-        """
-        Connect the points of the input signal by simple lines.
+    def draw(self, context, data):
+        """Redraw the drawing area.
         
         Keywords:
-            cr cairo context used for drawing purposes.
-            data list of values bounded between -1 and +1.
+            context surface used for drawing actions.
+            data list of data to be visualized.
         """
-        cr.set_source_rgb(1, 1, 1)
-        cr.rectangle(0, 0, self.width, self.height)
-        cr.fill()
+        context.set_source_rgb(0, 0, 0)
+        context.rectangle(-1, -1, 2, 2)
+        context.fill()
         
-        cr.set_source_rgb(0, 0, 0)
-        samples = len(data)
-        step = (self.width - 1) / (samples // 2)
-        cr.move_to(0, self.height // 2)
-        for (i, y) in enumerate(data):
-            x = i * step
-            y = -y * (self.height // 2)
-            cr.line_to(x, self.height // 2 + y)
-        cr.line_to(self.width - 1, self.height // 2)
-        cr.fill() if self.fill else cr.stroke()
+        context.set_source_rgb(1, 0, 1)
+        width = 2 / len(data)
+        x = -1
+        for value in data:
+            y = -value / 32768
+            context.line_to(x, y)
+            context.move_to(x, y)
+            x += width
+        context.stroke()
