@@ -47,13 +47,23 @@ class Source(gobject.GObject):
             bitspersample: 16 signed
             endianess: little
             
-        Emit a signal containing the array of data, normalized between -1 and
-        +1.
+        Emit a signal containing the array of data: the values are bounded
+        between -(2 ** 15) and ((2 ** 15) - 1)
         """
-        samples = buff.size // 2
+        for item in buff.caps:
+            try:
+                if (item['endianness'] == 1234 and item['signed'] == True and
+                    item['width'] == 16 and item['depth'] == 16 and
+                    item['rate'] == 44100 and item['channels'] == 1):
+                    continue
+            except KeyError:
+                print 'Caps not supported:', buff.caps
+                return
+            
+        samples = buff.size // 2 #16 bits per sample
 
         fmt = "<" + str(samples) + "h"
-        data = [v / 32768 for v in unpack(fmt, buff.data)]
+        data = unpack(fmt, buff.data)
         
         self.emit('new-data', data)
     
