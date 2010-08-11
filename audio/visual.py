@@ -12,6 +12,8 @@ import cairo
 import gtk
 from numpy import abs
 from numpy import log10
+from numpy import pi
+from numpy import sin
 
 from audio.util import fft
 
@@ -28,6 +30,7 @@ class Visualizer(gtk.Window):
         super(Visualizer, self).__init__()
         
         self.data = []
+        self.time = 0L
         self.surface = self.context = None
         darea = gtk.DrawingArea()
         
@@ -78,6 +81,7 @@ class Visualizer(gtk.Window):
                  ((2 ** 15) - 1).
         """
         self.data[:] = data
+        self.time += 0.01
         self.draw(self.context)
         self.queue_draw()
 
@@ -122,6 +126,7 @@ class Analyzer(Visualizer):
         
         threshold = self.threshold
         bands = self.bands
+        time = self.time
         data = self.data
         
         # compute the fft and trasform it in decibel notation: we need to add
@@ -147,8 +152,13 @@ class Analyzer(Visualizer):
                 value = threshold
             y = 1 - (value - threshold) / (-threshold) * 2
             context.line_to(x, y)
+            
+            r = 0.5 + 0.5 * sin(time + 0)
+            g = 0.5 + 0.5 * sin(time + 2 * pi / 3)
+            b = 0.5 + 0.5 * sin(time + 4 * pi / 3)
+            context.set_source_rgb(r, g, b)
+            context.stroke()
             x += width
-        context.stroke()
     
     
 class Oscilloscope(Visualizer):
