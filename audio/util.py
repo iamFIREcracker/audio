@@ -9,6 +9,14 @@ from numpy import abs
 from numpy import log10
 from numpy.fft import fft as _fft
 
+        
+def _nextpow(x, b):
+    """Find the smallest integer p such that b ** p > x.
+    """
+    p = 1
+    while p < x:
+        p *= b
+    return p
 
 def fft(data):
     """Compute the fast Fourier transform on the input data.
@@ -23,4 +31,6 @@ def fft(data):
         Abs of the normalized fft.
     """
     N = len(data)
-    return 20 * log10((abs(_fft(data)[:N // 2] + 1e-15) / N) / 32768)
+    M = _nextpow(len(data), 2)
+    data = 20 * log10((abs(_fft(data, M)[:M // 2] + 1e-15) / M) / 32768)
+    return data[:N]
