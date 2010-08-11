@@ -63,9 +63,7 @@ class Source(gobject.GObject):
         samples = buff.size // 2 #16 bits per sample
 
         fmt = "<" + str(samples) + "h"
-        data = unpack(fmt, buff.data)
-        
-        self.emit('new-data', data)
+        self.emit('new-data', [v / 32768 for v in unpack(fmt, buff.data)])
     
     def start(self):
         """Start the pipeline.
