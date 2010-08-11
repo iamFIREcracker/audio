@@ -48,7 +48,7 @@ class Source(gobject.GObject):
             endianess: little
             
         Emit a signal containing the array of data: the values are bounded
-        between -(2 ** 15) and ((2 ** 15) - 1)
+        between -1 and 1
         """
         for item in buff.caps:
             try:
