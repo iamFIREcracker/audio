@@ -1,4 +1,5 @@
-# -*- coding: Latin-1 -*-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """Module containing utility functions for audio processing.
 """
