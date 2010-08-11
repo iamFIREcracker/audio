@@ -4,6 +4,8 @@
 """
 
 from __future__ import division
+from itertools import islice
+from itertools import chain
 
 import cairo
 import gtk
@@ -83,6 +85,24 @@ class Analyzer(Visualizer):
     """Display the spectrum analyzer of the input audio signal.
     """
     
+    def __init__(self, threshold=-60, bands=128):
+        """Constructor.
+        
+        Keywords:
+            threshold threshold value (in dB) used to display fft data.
+            bands number of output values extracted from fft.
+        """
+        super(Analyzer, self).__init__()
+        
+        self.threshold = threshold
+        self.bands = bands
+    
+    def _batch(self, iterable, size):
+        sourceiter = iter(iterable)
+        while True:
+            batchiter = islice(sourceiter, size)
+            yield list(chain([batchiter.next()], batchiter))
+            
     def draw(self, context):
         """Redraw the drawing area.
         
@@ -94,10 +114,13 @@ class Analyzer(Visualizer):
         context.fill()
         context.set_source_rgb(1, 1, 1)
         
-        threshold = -60 # dB
+        threshold = self.threshold
+        bands = self.bands
         data = self.data
+        group = len(data) / bands
         
         data = 20 * log10(abs(fft(data) + 1e-15))
+        data = [sum(seq) / len(seq) for seq in self._batch(data, group)]
         
         width = 2 / len(data)
         context.set_line_width(width)
