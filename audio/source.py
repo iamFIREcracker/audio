@@ -15,8 +15,6 @@ class Source(gobject.GObject):
     """Base audio source object.
     """
     
-    """Signal emitted when a new audio buffer is ready for processing.
-    """
     __gsignals__ = {
             'new-data': (gobject.SIGNAL_RUN_FIRST, None,
                          (gobject.TYPE_PYOBJECT,)),
