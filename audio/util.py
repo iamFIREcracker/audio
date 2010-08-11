@@ -5,8 +5,6 @@
 
 from __future__ import division
 
-from numpy import abs
-from numpy import log10
 from numpy.fft import fft as _fft
 
         
@@ -32,5 +30,5 @@ def fft(data):
     """
     N = len(data)
     M = _nextpow(len(data), 2)
-    data = 20 * log10((abs(_fft(data, M)[:M // 2] + 1e-15) / M) / 32768)
+    data = _fft(data, M) / M
     return data[:N]
