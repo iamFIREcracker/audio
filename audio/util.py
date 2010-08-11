@@ -5,20 +5,22 @@
 
 from __future__ import division
 
-import numpy
+from numpy import abs
+from numpy import log10
+from numpy.fft import fft as _fft
 
 
 def fft(data):
-    """Compute the fft of the input data.
+    """Compute the fast Fourier transform on the input data.
     
-    The returned list of values is normalized by a coefficient 2/N with N
-    number of input samples, and is relative to positive values of frequencies.
+    The output is the normalized magnitude of the values associated to the
+    positive frequencies.
     
     Keywords:
-        data List of values bounded between -1 and +1.
+        data list of data values.
         
     Return:
-        Normalized fft.
+        Abs of the normalized fft.
     """
     N = len(data)
-    return 2 / N * numpy.fft.fft(data)[:N // 2]
+    return 20 * log10((abs(_fft(data)[:N // 2] + 1e-15) / N) / 32768)
