@@ -162,7 +162,7 @@ class AudioFile(Source):
             emit flag indicating wether to emit signals notifying new data.
         """
         super(AudioFile, self).__init__(
-            '''filesrc location={0} !
+            '''filesrc location="{0}" !
                decodebin !
                audioconvert !
                audio/x-raw-int,
