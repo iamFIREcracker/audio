@@ -20,16 +20,16 @@ def _nextpow(x, b):
 def fft(data):
     """Compute the fast Fourier transform on the input data.
     
-    The output is the normalized magnitude of the values associated to the
-    positive frequencies.
+    The normalized output is relative to the positive frequencies.
     
     Keywords:
         data list of data values.
         
     Return:
-        Abs of the normalized fft.
+        Normalized fft.
     """
     N = len(data)
     M = _nextpow(len(data), 2)
-    data = _fft(data, M) / M
-    return data[:N]
+    norm_factor = 2 / M
+    data = norm_factor * _fft(data, M)
+    return data[:N // 2]
