@@ -173,9 +173,13 @@ class Oscilloscope(Visualizer):
         width = 2 / len(data)
         context.set_line_width(width)
         x = -1 + width / 2
+        context.move_to(x, 0)
         for value in data:
             y = -value
             context.line_to(x, y)
-            context.move_to(x, y)
             x += width
-        context.stroke()
+        context.line_to(1 - width / 2, 0)
+        if fill:
+            context.fill()
+        else:
+            context.stroke()
