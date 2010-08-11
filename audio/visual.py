@@ -119,15 +119,24 @@ class Analyzer(Visualizer):
         context.set_source_rgb(0, 0, 0)
         context.rectangle(-1, -1, 2, 2)
         context.fill()
-        context.set_source_rgb(1, 1, 1)
         
         threshold = self.threshold
         bands = self.bands
         data = self.data
-        group = len(data) / bands
         
-        data = 20 * log10(abs(fft(data) + 1e-15))
+        # compute the fft and trasform it in decibel notation: we need to add
+        # 1e-15 in order to prevent to raise an exception if the abs of a value
+        # is equal to 0. The max value is 1 so we normalize over it.
+        data = 20 * log10(abs(fft(data) + 1e-15) / 1)
+        
+        # how many values we have to merge in order to achieve the desired
+        # number of bands
+        group = len(data) / bands
         data = [sum(seq) / len(seq) for seq in self._batch(data, group)]
+        
+        # is it possible to obtain more values that needed; we simply ignore
+        # them (they refer to high value of frequencies.
+        data[:] = data[:bands]
         
         width = 2 / len(data)
         context.set_line_width(width)
