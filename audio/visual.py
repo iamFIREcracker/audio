@@ -98,6 +98,12 @@ class Analyzer(Visualizer):
         self.bands = bands
     
     def _batch(self, iterable, size):
+        """Split the iterable into batchs of given size.
+        
+        Keywords:
+            iterable iterable to split.
+            size max size of each returned batch (last one could be smaller).
+        """
         sourceiter = iter(iterable)
         while True:
             batchiter = islice(sourceiter, size)
