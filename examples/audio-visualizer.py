@@ -1,4 +1,5 @@
-# -*- coding: Latin-1 -*-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -17,12 +18,17 @@ def new_data_cb(source, data, visualizer):
     visualizer.refresh(data)
     
 def main(argv):
-    if len(argv) != 2:
-        print "Usage: {0} <source>".format(sys.argv[0])
+    if len(argv) < 2:
+        print "Usage: {0} <source> [<options> ..]".format(sys.argv[0])
         return 1
     
     loop = gobject.MainLoop()
-    visualizer = audio.visual.Analyzer()
+    
+    if '--analyzer' in argv:
+        visualizer = audio.visual.Analyzer()
+    else:
+        visualizer = audio.visual.Oscilloscope('--fill' in argv)
+        
     if argv[1] == 'mic':
         source = audio.source.Microphone(emit=True)
     elif argv[1] == 'tone':
