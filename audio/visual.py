@@ -116,9 +116,9 @@ class Analyzer(Visualizer):
         bands = self.bands
         data = self.data
         
-        # compute the fft and trasform it in decibel notation: we need to add
-        # 1e-15 in order to prevent to raise an exception if the abs of a value
-        # is equal to 0. The max value is 1 so we normalize over it.
+        # compute the fft and trasform it in decibel notation:
+        # - add 1e-15 in order to prevent log10(0).
+        # - we divide by 1 because it is supposed to be the highest peak.
         data = 20 * log10(abs(fft(data) + 1e-15) / 1)
         
         # how many values we have to merge in order to achieve the desired
@@ -130,6 +130,7 @@ class Analyzer(Visualizer):
         # them (they refer to high value of frequencies.
         data[:] = data[:bands]
         
+        # color stuff.
         r = 0.5 + 0.5 * sin(time * 0.314 + 0)
         g = 0.5 + 0.5 * sin(time * 0.314 + 2 * pi / 3)
         b = 0.5 + 0.5 * sin(time * 0.314 + 4 * pi / 3)
@@ -139,7 +140,7 @@ class Analyzer(Visualizer):
         context.set_line_width(width)
         
         x = -1 + width / 2
-        for (i, value) in enumerate(data):
+        for value in data:
             context.move_to(x, 1)
             if value < threshold:
                 value = threshold
