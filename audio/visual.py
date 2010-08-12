@@ -5,8 +5,6 @@
 """
 
 from __future__ import division
-from itertools import islice
-from itertools import chain
 
 import cairo
 import gtk
@@ -16,6 +14,7 @@ from numpy import pi
 from numpy import sin
 
 from audio.util import fft
+from audio.util import batch
 
 
 class Visualizer(gtk.Window):
@@ -81,7 +80,7 @@ class Visualizer(gtk.Window):
                  ((2 ** 15) - 1).
         """
         self.data[:] = data
-        self.time += 0.01
+        self.time += 0.05
         self.draw(self.context)
         self.queue_draw()
 
@@ -102,18 +101,6 @@ class Analyzer(Visualizer):
         self.threshold = threshold
         self.bands = bands
     
-    def _batch(self, iterable, size):
-        """Split the iterable into batchs of given size.
-        
-        Keywords:
-            iterable iterable to split.
-            size max size of each returned batch (last one could be smaller).
-        """
-        sourceiter = iter(iterable)
-        while True:
-            batchiter = islice(sourceiter, size)
-            yield list(chain([batchiter.next()], batchiter))
-            
     def draw(self, context):
         """Redraw the drawing area.
         
@@ -124,9 +111,9 @@ class Analyzer(Visualizer):
         context.rectangle(-1, -1, 2, 2)
         context.fill()
         
+        time = self.time
         threshold = self.threshold
         bands = self.bands
-        time = self.time
         data = self.data
         
         # compute the fft and trasform it in decibel notation: we need to add
@@ -137,26 +124,28 @@ class Analyzer(Visualizer):
         # how many values we have to merge in order to achieve the desired
         # number of bands
         group = len(data) / bands
-        data = [sum(seq) / len(seq) for seq in self._batch(data, group)]
+        data = [sum(seq) / len(seq) for seq in batch(data, group)]
         
         # is it possible to obtain more values that needed; we simply ignore
         # them (they refer to high value of frequencies.
         data[:] = data[:bands]
         
+        r = 0.5 + 0.5 * sin(time * 0.314 + 0)
+        g = 0.5 + 0.5 * sin(time * 0.314 + 2 * pi / 3)
+        b = 0.5 + 0.5 * sin(time * 0.314 + 4 * pi / 3)
+        context.set_source_rgb(r, g, b)
+        
         width = 2 / len(data)
         context.set_line_width(width)
+        
         x = -1 + width / 2
-        for value in data:
+        for (i, value) in enumerate(data):
             context.move_to(x, 1)
             if value < threshold:
                 value = threshold
             y = 1 - (value - threshold) / (-threshold) * 2
             context.line_to(x, y)
             
-            r = 0.5 + 0.5 * sin(time + 0)
-            g = 0.5 + 0.5 * sin(time + 2 * pi / 3)
-            b = 0.5 + 0.5 * sin(time + 4 * pi / 3)
-            context.set_source_rgb(r, g, b)
             context.stroke()
             x += width
     
@@ -185,12 +174,21 @@ class Oscilloscope(Visualizer):
         context.rectangle(-1, -1, 2, 2)
         context.fill()
         
+        time = self.time
         fill = self.fill
         data = self.data
         
-        context.set_source_rgb(1, 1, 1)
+        group = len(data) / 256
+        data = [sum(seq) / len(seq) for seq in batch(data, group)]
+        
+        r = 0.5 + 0.5 * sin(time * 0.314 + 0)
+        g = 0.5 + 0.5 * sin(time * 0.314 + 2 * pi / 3)
+        b = 0.5 + 0.5 * sin(time * 0.314 + 4 * pi / 3)
+        context.set_source_rgb(r, g, b)
+        
         width = 2 / len(data)
         context.set_line_width(width)
+        
         x = -1 + width / 2
         context.move_to(x, 0)
         for value in data:
