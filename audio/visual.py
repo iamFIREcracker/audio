@@ -17,7 +17,7 @@ from audio.util import fft
 from audio.util import batch
 
 
-class Visualizer(gtk.Window):
+class Visualizer(gtk.DrawingArea):
     """Base class used by inheritance from the various specific visualizers.
     """
 
@@ -30,12 +30,9 @@ class Visualizer(gtk.Window):
 
         self.data = []
         self.surface = self.context = None
-        darea = gtk.DrawingArea()
 
-        darea.connect('configure-event', self.configure_cb)
-        darea.connect('expose-event', self.expose_cb)
-        self.add(darea)
-        self.show_all()
+        self.connect('configure-event', self.configure_cb)
+        self.connect('expose-event', self.expose_cb)
 
     def configure_cb(self, darea, event):
         """Create a private surface and its cairo context.
