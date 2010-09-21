@@ -5,12 +5,13 @@ import os
 import sys
 
 import gobject
+import gtk
 
 import audio.source
 import audio.visual
 
 
-def delete_cb(visualizer, event, source, loop):
+def delete_cb(window, event, source, loop):
     source.stop()
     loop.quit()
 
@@ -23,6 +24,7 @@ def main(argv):
         return 1
     
     loop = gobject.MainLoop()
+    window = gtk.Window()
     
     if '--analyzer' in argv:
         visualizer = audio.visual.Analyzer()
@@ -38,9 +40,13 @@ def main(argv):
         if not location.startswith('/'):
             location = os.path.join(os.getcwd(), location)
         source = audio.source.AudioFile(location, emit=True)
-        
-    visualizer.connect('delete-event', delete_cb, source, loop)
+
+    window.connect('delete-event', delete_cb, source, loop)
     source.connect('new-data', new_data_cb, visualizer)
+
+    window.add(visualizer)
+    window.show_all()
+
     source.start()
     
     gobject.threads_init()
