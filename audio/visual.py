@@ -117,17 +117,6 @@ class Analyzer(Visualizer):
         # - add 1e-15 in order to prevent log10(0).
         # - we divide by 1 because it is supposed to be the highest peak.
         data = 20 * log10(abs(fft(data) + 1e-15) / 1)
-        ## data = 20 * log10(abs(fft(data[:512]) + 1e-15) / 1)
-        ## temp = []
-        ## i = 1
-        ## j = 1
-        ## for k in xrange(8):
-        ##     if k == 7:
-        ##         j -= 1
-        ##     temp.append(max(data[i:i + j]))
-        ##     i += j
-        ##     j *= 2
-        ## data = temp
 
         # how many values we have to merge in order to achieve the desired
         # number of bands
@@ -137,6 +126,10 @@ class Analyzer(Visualizer):
         # is it possible to obtain more values that needed; we simply ignore
         # them (they refer to high value of frequencies.
         data[:] = data[:bands]
+
+        ## data = 20 * log10(abs(fft(data[:512]) + 1e-15) / 1)
+        ## temp = []
+        ## data = [max(data[2 ** i:2 ** (i + 1)]) for i in xrange(8)]
 
         # color stuff.
         context.set_source_rgb(.8, .8, .8)
