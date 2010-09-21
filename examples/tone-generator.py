@@ -17,20 +17,23 @@ def delete_cb(window, event, source, mainloop):
 
 def new_data_cb(source, data, visualizer):
     visualizer.refresh(data)
-    
+
 def end_dnd_cb(widget, source):
     source.pause()
-    
+
 def start_dnd_cb(widget, source):
     source.start()
-    
+
 def dnd_value_cb(widget, x, y, source):
-    print 'dnd-value', x, y
+    if __debug__:
+        print 'dnd-value', x, y
     source.set_values(x, y)
 
 def main(argv):
     mainloop = gobject.MainLoop()
+
     window = gtk.Window()
+    hbox = gtk.HBox()
 
     source = audio.source.Tone(emit=True)
     visualizer = audio.visual.Analyzer()
@@ -42,8 +45,10 @@ def main(argv):
     pad.connect('end-dnd', end_dnd_cb, source)
     pad.connect('start-dnd', start_dnd_cb, source)
     pad.connect('dnd-value', dnd_value_cb, source)
-    
-    window.add(visualizer)
+
+    map(hbox.pack_start, (pad, visualizer))
+    window.add(hbox)
+    window.set_default_size(500, 200)
     window.show_all()
 
     gobject.threads_init()
