@@ -10,10 +10,10 @@ from itertools import chain
 
 from numpy.fft import fft as _fft
 
-        
+
 def batch(iterable, size):
     """Split the iterable into batchs of given size.
-    
+
     Keywords:
         iterable iterable to split.
         size max size of each returned batch (last one could be smaller).
@@ -25,13 +25,13 @@ def batch(iterable, size):
 
 def fft(data):
     """Compute the fast Fourier transform on the input data.
-    
+
     The normalized output is relative to the positive frequencies and takes
     into account the power loss due to discarding half of the result.
-    
+
     Keywords:
         data list of data values.
-        
+
     Return:
         Normalized fft.
     """
@@ -44,7 +44,7 @@ def fft(data):
             n *= b
             p += 1
         return p
-    
+
     N = len(data)
     M = 2 ** nextpow(len(data), 2)
     normfact = 1.4142135623730951 / N
