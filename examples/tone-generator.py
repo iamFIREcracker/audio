@@ -4,6 +4,7 @@
 import sys
 
 import gobject
+import gtk
 
 import audio.visual
 import audio.source
@@ -29,17 +30,22 @@ def dnd_value_cb(widget, x, y, source):
 
 def main(argv):
     mainloop = gobject.MainLoop()
+    window = gtk.Window()
+
     source = audio.source.Tone(emit=True)
     visualizer = audio.visual.Analyzer()
     pad = audio.tool.Pad()
 
-    visualizer.connect('delete-event', delete_cb, source, mainloop)
+    window.connect('delete-event', delete_cb, source, mainloop)
     source.connect('new-data', new_data_cb, visualizer)
     pad.connect('delete-event', delete_cb, source, mainloop)
     pad.connect('end-dnd', end_dnd_cb, source)
     pad.connect('start-dnd', start_dnd_cb, source)
     pad.connect('dnd-value', dnd_value_cb, source)
     
+    window.add(visualizer)
+    window.show_all()
+
     gobject.threads_init()
     mainloop.run()
 
