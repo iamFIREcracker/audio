@@ -36,7 +36,7 @@ def fft(data):
         Normalized fft.
     """
     def nextpow(x, b):
-        """Find the smallest integer p such that b ** p > x.
+        """Find the smallest integer p such that b ** p >= x.
         """
         p = 0
         n = 1
