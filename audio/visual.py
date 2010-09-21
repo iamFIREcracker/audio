@@ -29,7 +29,6 @@ class Visualizer(gtk.Window):
         super(Visualizer, self).__init__()
 
         self.data = []
-        self.time = 0L
         self.surface = self.context = None
         darea = gtk.DrawingArea()
 
@@ -80,7 +79,6 @@ class Visualizer(gtk.Window):
                  ((2 ** 15) - 1).
         """
         self.data[:] = data
-        self.time += 0.05
         self.draw(self.context)
         self.queue_draw()
 
@@ -111,16 +109,14 @@ class Analyzer(Visualizer):
         context.rectangle(-1, -1, 2, 2)
         context.fill()
 
-        time = self.time
         threshold = self.threshold
         bands = self.bands
-        ## bands = 8
         data = self.data
 
         # compute the fft and trasform it in decibel notation:
         # - add 1e-15 in order to prevent log10(0).
         # - we divide by 1 because it is supposed to be the highest peak.
-        ## data = 20 * log10(abs(fft(data) + 1e-15) / 1)
+        data = 20 * log10(abs(fft(data) + 1e-15) / 1)
         ## data = 20 * log10(abs(fft(data[:512]) + 1e-15) / 1)
         ## temp = []
         ## i = 1
@@ -143,11 +139,9 @@ class Analyzer(Visualizer):
         data[:] = data[:bands]
 
         # color stuff.
-        r = 0.5 + 0.5 * sin(time * 0.314 + 0)
-        g = 0.5 + 0.5 * sin(time * 0.314 + 2 * pi / 3)
-        b = 0.5 + 0.5 * sin(time * 0.314 + 4 * pi / 3)
-        context.set_source_rgb(r, g, b)
+        context.set_source_rgb(.8, .8, .8)
 
+        # actual rendering.
         width = 2 / len(data)
         context.set_line_width(width)
 
@@ -187,18 +181,16 @@ class Oscilloscope(Visualizer):
         context.rectangle(-1, -1, 2, 2)
         context.fill()
 
-        time = self.time
         fill = self.fill
         data = self.data
 
         group = len(data) / 256
         data = [sum(seq) / len(seq) for seq in batch(data, group)]
 
-        r = 0.5 + 0.5 * sin(time * 0.314 + 0)
-        g = 0.5 + 0.5 * sin(time * 0.314 + 2 * pi / 3)
-        b = 0.5 + 0.5 * sin(time * 0.314 + 4 * pi / 3)
-        context.set_source_rgb(r, g, b)
+        # color stuff.
+        context.set_source_rgb(.8, .8, .8)
 
+        # actual rendering.
         width = 2 / len(data)
         context.set_line_width(width)
 
