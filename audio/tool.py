@@ -13,14 +13,14 @@ import gtk
 from gtk import gdk
 
 
-class Pad(gtk.Window):
+class Pad(gtk.DrawingArea):
     """Widget used to generate pairs of coordinate values.
-    
+
     Create a drawing area connected to mouse events. Generate a couple of
     values between -1 and +1 depending on the position of the mouse during a 
     drag and drop operation.
     """
-    
+
     __gsignals__ = {
             'start-dnd': (gobject.SIGNAL_RUN_FIRST, None, ()),
             'dnd-value': (gobject.SIGNAL_RUN_FIRST, None,
@@ -30,7 +30,7 @@ class Pad(gtk.Window):
 
     def __init__(self):
         """Constructor.
-        
+
         Create a drawing area and connect to mouse events.
         """
         super(Pad, self).__init__()
@@ -39,18 +39,15 @@ class Pad(gtk.Window):
         self.width, self.height = -1, -1
         self.surface, self.cr = None, None
 
-        darea = gtk.DrawingArea()
-        darea.add_events(gdk.BUTTON_PRESS_MASK
-                              | gdk.BUTTON_RELEASE_MASK
-                              | gdk.POINTER_MOTION_MASK
-                              | gdk.POINTER_MOTION_HINT_MASK)
-        darea.connect('button-press-event', self.button_press_cb)
-        darea.connect('button-release-event', self.button_release_cb)
-        darea.connect('configure-event', self.configure_cb)
-        darea.connect('expose-event', self.expose_cb)
-        darea.connect('motion_notify_event', self.motion_notify_cb)
-        self.add(darea)
-        self.show_all()
+        self.add_events(gdk.BUTTON_PRESS_MASK
+                        | gdk.BUTTON_RELEASE_MASK
+                        | gdk.POINTER_MOTION_MASK
+                        | gdk.POINTER_MOTION_HINT_MASK)
+        self.connect('button-press-event', self.button_press_cb)
+        self.connect('button-release-event', self.button_release_cb)
+        self.connect('configure-event', self.configure_cb)
+        self.connect('expose-event', self.expose_cb)
+        self.connect('motion_notify_event', self.motion_notify_cb)
 
     def button_press_cb(self, darea, event):
         """Notify the beginning of a drag and drop event.
@@ -82,8 +79,9 @@ class Pad(gtk.Window):
                                           self.height)
         self.cr = cairo.Context(self.surface)
         self.draw(self.cr, self.width, self.height)
+
         return True
-    
+
     def expose_cb(self, darea, event):
         """Redraw either the whole window or a part of it.
         """
@@ -93,8 +91,9 @@ class Pad(gtk.Window):
         cr.clip()
         cr.set_source_surface(self.surface, 0, 0)
         cr.paint()
+
         return False
-    
+
     def motion_notify_cb(self, darea, event):
         """Emit a new drag and drop value.
         """
@@ -114,26 +113,26 @@ class Pad(gtk.Window):
 
     def draw(self, cr, width, height):
         """Draw the white background of the pad widget.
-        
+
         Keywords:
             cr cairo context used for drawing operations.
             width width of the cairo context.
             height height of the cairo context.
         """
-        cr.set_source_rgb(1, 1, 1)
+        cr.set_source_rgb(0, 0, 0)
         cr.rectangle(0, 0, width, height)
         cr.fill()
 
     def draw_pointer(self, cr, newx, newy):
         """Draw a circle surrounding the the pointer.
-        
+
         Keywords:
             cr cairo context.
             newx new x coordinate of the pointer.
             newy new y coordinate of the pointer.
         """
-        data = [(self.oldx, self.oldy, 15, (1, 1, 1)),
-                (newx, newy, 10, (0, 1, 0))]
+        data = [(self.oldx, self.oldy, 15, (0, 0, 0)),
+                (newx, newy, 10, (.8, .8, .8))]
         for (x, y, radius, (r, g, b)) in data:
             if x and y:
                 cr.set_source_rgb(r, g, b)
@@ -142,15 +141,15 @@ class Pad(gtk.Window):
 
     def absolute_to_relative(self, x, y):
         """Convert given coordinate from absolute to relative.
-        
+
         The returned coordinates are relative to the center of the widget.
-        
+
         Keywords:
             x x coordinate of the mouse.
             y y coordinate of the mouse.
             width width of the window.
             height height of the window.
-            
+
         Return:
             Pair of relative coordinates bounded between -1 and +1.
         """
@@ -159,11 +158,11 @@ class Pad(gtk.Window):
             rel_x = 1
         elif rel_x < -1:
             rel_x = -1
-            
+
         rel_y = (self.height / 2 - y) / (self.height / 2)
         if rel_y > 1:
             rel_y = 1
         elif rel_y < -1:
-            rel_y = -1  
+            rel_y = -1
 
         return rel_x, rel_y
