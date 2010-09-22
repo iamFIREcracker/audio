@@ -79,6 +79,14 @@ class Source(gobject.GObject):
         """
         self.pipeline.set_state(gst.STATE_READY)
 
+    def set_delay(self, delay):
+        """Set output delay to the given amount of time.
+
+        Keywords:
+            delay: amount delay in nano-seconds.
+        """
+        self.pipeline.get_by_name('asink').set_property('ts-offset', delay)
+
 
 class Microphone(Source):
     """Microphone source object.
@@ -92,7 +100,7 @@ class Microphone(Source):
             emit flag indicating wether to emit signals notifying new data.
         """
         super(Microphone, self).__init__(
-            '''alsasrc name=source !
+            '''pulsesrc name=source !
                audioconvert !
                audio/x-raw-int,
                        channels=1,
@@ -104,7 +112,7 @@ class Microphone(Source):
                queue max-size-time=1000 !
                    fakesink name=fsink signal-handoffs=true sync=true t. !
                queue max-size-time=1000 !
-                   autoaudiosink name=asink''', speakers, emit)
+                   pulsesink name=asink''', speakers, emit)
 
 
 class Tone(Source):
@@ -131,7 +139,7 @@ class Tone(Source):
                queue max-size-time=1000 !
                    fakesink name=fsink signal-handoffs=true sync=true t. !
                queue max-size-time=1000 !
-                   autoaudiosink name=asink''', speakers, emit)
+                   pulsesink name=asink''', speakers, emit)
 
     def set_values(self, freq, volume):
         """Set source properties.
@@ -171,5 +179,5 @@ class AudioFile(Source):
                queue max-size-time=1000 !
                    fakesink name=fsink signal-handoffs=true sync=true t. !
                queue max-size-time=1000 !
-                   autoaudiosink name=asink'''.format(location), 
+                   pulsesink name=asink'''.format(location),
             speakers, emit)
