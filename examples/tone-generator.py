@@ -36,19 +36,21 @@ def main(argv):
     hbox = gtk.HBox()
 
     source = audio.source.Tone(emit=True)
-    visualizer = audio.visual.Analyzer()
     pad = audio.tool.Pad()
+    hbox.pack_start(pad)
+    if '--analyzer' in argv:
+        visualizer = audio.visual.Analyzer()
+        source.connect('new-data', new_data_cb, visualizer)
+        hbox.pack_start(visualizer)
+        window.set_default_size(500, 200)
 
     window.connect('delete-event', delete_cb, source, mainloop)
-    source.connect('new-data', new_data_cb, visualizer)
     pad.connect('delete-event', delete_cb, source, mainloop)
     pad.connect('end-dnd', end_dnd_cb, source)
     pad.connect('start-dnd', start_dnd_cb, source)
     pad.connect('dnd-value', dnd_value_cb, source)
 
-    map(hbox.pack_start, (pad, visualizer))
     window.add(hbox)
-    window.set_default_size(500, 200)
     window.show_all()
 
     gobject.threads_init()
